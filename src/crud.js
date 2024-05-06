@@ -5,6 +5,9 @@ import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const Crud = () => {
 
@@ -44,24 +47,87 @@ const Crud = () => {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        setData(empdata);
+        getdata();
     }, []);
+
+    const getdata = () => {
+        axios.get('https://localhost:44303/api/Employee')
+        .then((result)=> {
+            setData(result.data)
+        })
+        .catch((error)=>{
+            console.log(error)
+        })
+    }
 
     const handleEdit = (id) => {
         handleShow();
     }
     const handleDelete = (id) => {
         if (window.confirm('Seguro que deseas borrar este empleado?') === true) {
-            alert(id);
+            axios.delete(`https://localhost:44303/api/Employee/${id}`)
+            .then((result)=>{
+                if(result.status === 200){
+                    toast.success('Ha sido eliminado');
+                    getdata();
+                }
+            }).catch((error)=>{
+                toast.error(error)
+            })
         }
     }
-    const handleUpdate = (id) => {
+    const handleUpdate = () => {
 
+    }
+    const handleSave = () => {
+        const url = 'https://localhost:44303/api/Employee';
+        const data = {
+            "name": name,
+            "age": age,
+            "isActive": isActive
+        }
+        axios.post (url, data)
+        .then((result) => {
+            getdata();
+            clear();
+            toast.success('Ha sido guardado');
+        }).catch((error)=>{
+            toast.error(error)
+        })
+    }
+
+    const clear = () =>{
+        setName('');
+        setAge('');
+        setIsActive(0);
+        setEditName('');
+        setEditAge('');
+        setEditIsActive(0);
+        setEditId('');
+    }
+
+    const handleActiveChange =(e)=> {
+        if(e.target.checked){
+            setIsActive(1);
+        }
+        else{
+            setIsActive(0)
+        }
+    }
+
+    const handleEditActiveChange =(e)=> {
+        if(e.target.checked){
+            setEditIsActive(1);
+        }
+        else{
+            setEditIsActive(0)
+        }
     }
 
     return (
         <Fragment>
             <br></br>
+            <ToastContainer/>
             <Container>
                 <Row>
                     <Col>
@@ -72,11 +138,11 @@ const Crud = () => {
                     </Col>
                     <Col>
                         <input class="form-check-input" type="checkbox" checked={isActive === 1 ? true : false}
-                            onChange={(e) => setIsActive(e)} value={isActive} />
+                            onChange={(e) => handleActiveChange(e)} value={isActive} />
                         <label>Activo</label>
                     </Col>
                     <Col>
-                        <button className="btn btn-primary">Submit</button>
+                        <button className="btn btn-primary" onClick={() => handleSave()}>Submit</button>
                     </Col>
                 </Row>
             </Container>
@@ -126,7 +192,7 @@ const Crud = () => {
                         </Col>
                         <Col>
                             <input type="checkbox" checked={editIsActive === 1 ? true : false}
-                                onChange={(e) => setEditIsActive(e)} value={editIsActive} />
+                                onChange={(e) => handleEditActiveChange(e)} value={editIsActive} />
                             <label>Activo</label>
                         </Col>
                     </Row>
